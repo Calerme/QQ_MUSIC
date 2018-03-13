@@ -1,23 +1,24 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
+    <q-header></q-header>
+    <nav-bar></nav-bar>
     <router-view/>
   </div>
 </template>
 
 <script>
+import QHeader from 'components/QHeader'
+import NavBar from 'components/NavBar'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    QHeader,
+    NavBar
+  }
 }
 </script>
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+<style lang="scss">
+  @import '~common/style/main';
 </style>
