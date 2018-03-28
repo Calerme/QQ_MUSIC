@@ -1,33 +1,49 @@
 <template>
-  <div>
-    <div class="slider-container">
-      <Slider v-if="sliderList.length">
-        <a v-for="item of sliderList"
-           :key="item.id"
-           :href="item.linkUrl"
-        class="slider-item-wrapper">
-          <img :src="item.picUrl" alt="推荐歌曲">
-        </a>
-      </Slider>
-    </div>
-    <h2 class="hot-list-title">热门歌单</h2>
-    <div class="hot-list">
-      <div v-for="item of hotList"
-           :key="item.dissid"
-           class="hot-list-item">
-        <img :src="item.imgurl"
-             :alt="item.title">
-        <div class="hot-list-item-information">
-          <h3 class="hot-list-item-title">{{item.creator.name}}</h3>
-          <p class="hot-list-item-info">{{item.dissname}}</p>
+  <div ref="recommend"
+       class="recommend">
+    <Scroll :data="hotList"
+            class="recommend-scroll"
+            ref="scroll">
+      <div>
+        <div class="slider-container">
+          <Slider v-if="sliderList.length">
+            <a v-for="item of sliderList"
+               :key="item.id"
+               :href="item.linkUrl"
+            class="slider-item-wrapper">
+              <img :src="item.picUrl"
+                   @load="loadImage"
+                   alt="推荐歌曲">
+            </a>
+          </Slider>
+        </div>
+        <h2 class="hot-list-title">热门歌单</h2>
+        <div class="hot-list">
+          <a v-for="item of hotList"
+             :key="item.dissid"
+             :href="'https://y.qq.com/n/yqq/playsquare/'+ item.dissid + '.html'"
+             class="hot-list-item">
+            <img :src="item.imgurl"
+                 :alt="item.title">
+            <div class="hot-list-item-information">
+              <h3 class="hot-list-item-title">{{item.creator.name}}</h3>
+              <p class="hot-list-item-info">{{item.dissname}}</p>
+            </div>
+          </a>
         </div>
       </div>
-    </div>
+      <div v-show="!hotList.length"
+           class="loading-container">
+        <Loading></Loading>
+      </div>
+    </Scroll>
   </div>
 </template>
 <script>
 import {getSlider, getHotList} from 'api/getRecommend'
 import Slider from 'base/slider'
+import Scroll from 'base/scroll'
+import Loading from 'components/Loading'
 
 export default {
   name: 'Recommend',
@@ -40,6 +56,8 @@ export default {
   created () {
     this._getRecommend()
     this._getHotList()
+  },
+  mounted () {
   },
   methods: {
     _getRecommend () {
@@ -59,10 +77,18 @@ export default {
         .catch((err) => {
           console.error(err)
         })
+    },
+    loadImage () {
+      if (!this.checkImgLoaded) {
+        this.$refs.scroll.refresh()
+        this.checkImgLoaded = true
+      }
     }
   },
   components: {
-    Slider
+    Slider,
+    Scroll,
+    Loading
   }
 }
 </script>
@@ -87,12 +113,15 @@ export default {
     flex-direction: column;
   }
   .hot-list-item {
+    display: block;
     position: relative;
     display: flex;
     align-items: center;
     margin-bottom: 10px;
     padding: 0 5vw 10px 5vw;
     overflow: hidden;
+    color: inherit;
+    text-decoration: none;
   }
   .hot-list-item:after {
     position: absolute;
@@ -120,5 +149,21 @@ export default {
   .hot-list-item-info {
     margin: 0;
     font-size: $baseFontSize;
+  }
+  .recommend {
+    position: fixed;
+    width: 100%;
+    top: 84px;
+    bottom: 0;
+  }
+  .recommend-scroll {
+    height: 100%;
+    overflow: hidden;
+  }
+  .loading-container {
+    display: flex;
+    padding: 15px 0;
+    justify-content: center;
+    align-items: center;
   }
 </style>

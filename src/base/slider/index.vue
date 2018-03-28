@@ -82,8 +82,7 @@ export default {
           loop: this.loop,
           threshold: 0.3,
           speed: 400
-        },
-        // click: true
+        }
       })
 
       this.slider.on('beforeScrollStart', () => {
