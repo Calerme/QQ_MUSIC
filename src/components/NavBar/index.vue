@@ -25,17 +25,21 @@ export default {
 </script>
 <style lang="scss">
   @import "~common/style/base";
+
   .n {
     display: flex;
     justify-content: space-around;
     background-color: #fff;
   }
+
   .n_item {
     flex: 1;
     padding: .5rem 0;
     color: $baseColorGray;
     text-align: center;
+    cursor: pointer;
   }
+
   .n_item.router-link-active {
     color: $baseColor;
     border-bottom: 2px solid $baseColor;

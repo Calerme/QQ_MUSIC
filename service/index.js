@@ -4,13 +4,11 @@ const axios = require('axios')
 
 const app = new Koa()
 
-const url = 'https://c.y.qq.com/musichall/fcgi-bin/fcg_yqqhomepagerecommend.fcg'
-
-router.get('/api', async (ctx, next) => {
-  // const data = await axios.get(`${url}`)
-  // ctx.response.body = data.data
-  // ctx.response.body = JSON.stringify(ctx.query, null, 2)
-  const data = await axios.get(url + '?' + ctx.querystring)
+router.get('/api/getSlider', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/musichall/fcgi-bin/fcg_yqqhomepagerecommend.fcg'
+  const data = await axios.get(url, {
+    params: ctx.query
+  })
   ctx.response.set({ 'access-control-allow-credentials': true,
     'access-control-allow-origin': '*' })
   if (/^2\d{2}/.test(data.status)) {
@@ -21,5 +19,23 @@ router.get('/api', async (ctx, next) => {
   }
 })
 
+router.get('/api/getHotList', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+  const data = await axios.get(url, {
+    params: ctx.query,
+    headers: {
+      referer: 'https://y.qq.com/portal/playlist.html',
+      host: 'c.y.qq.com'
+    }
+  })
+  ctx.response.set({
+    'access-control-allow-credentials': true,
+    'access-control-allow-origin': '*'})
+  ctx.type = 'text/javascript'
+  ctx.body = data.data
+})
+
 app.use(router.routes())
-app.listen(9527)
+app.listen(9527, () => {
+  console.log('Server is running at 9527.')
+})
