@@ -30,6 +30,7 @@ export default {
     display: flex;
     justify-content: space-around;
     background-color: #fff;
+    padding-bottom: 3px;
   }
 
   .n_item {

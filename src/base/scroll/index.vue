@@ -68,7 +68,7 @@ export default {
 
       if (this.listenScroll) {
         this.scroll.on('scroll', (pos) => {
-          this.$emit(pos)
+          this.$emit('scroll', pos)
         })
       }
 

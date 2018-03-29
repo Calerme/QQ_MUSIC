@@ -23,7 +23,7 @@
              :key="item.dissid"
              :href="'https://y.qq.com/n/yqq/playsquare/'+ item.dissid + '.html'"
              class="hot-list-item">
-            <img :src="item.imgurl"
+            <img v-lazy="item.imgurl"
                  :alt="item.title">
             <div class="hot-list-item-information">
               <h3 class="hot-list-item-title">{{item.creator.name}}</h3>
@@ -153,7 +153,7 @@ export default {
   .recommend {
     position: fixed;
     width: 100%;
-    top: 84px;
+    top: 87px;
     bottom: 0;
   }
   .recommend-scroll {
