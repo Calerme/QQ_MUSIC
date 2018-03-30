@@ -1,13 +1,16 @@
 <template>
-  <div>
+  <div class="singer" ref="singer">
     <list-view :data="singerList"
-               ref="list"></list-view>
+               ref="list"
+               @select="selectSinger"/>
+    <router-view class="singer-desc-wrapper" />
   </div>
 </template>
 <script>
 import {getSinger} from 'api/getSinger'
 import Singer from 'common/js/Singer'
 import ListView from 'base/listview'
+import {mapMutations} from 'vuex'
 
 const HOT_NAME = '热门'
 const HOT_MAX = 10
@@ -32,6 +35,10 @@ export default {
   mounted () {
   },
   methods: {
+    selectSinger (singer) {
+      this.setSinger(singer)
+      this.$router.push(`/singer/${singer.id}`)
+    },
     _getSinger () {
       return getSinger()
         .then(data => {
@@ -83,10 +90,22 @@ export default {
         return a.title.charCodeAt(0) - b.title.charCodeAt((0))
       })
       this.singerList = hot.concat(ret)
-    }
+    },
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    })
   },
   components: {
     ListView
   }
 }
 </script>
+<style>
+  .singer-desc-wrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+</style>

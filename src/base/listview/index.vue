@@ -15,6 +15,7 @@
         <ul>
           <li v-for="item in group.members"
               :key="item.id"
+              @click.stop.prevent="selectSinger(item)"
               class="list-group-item">
             <img class="avator" v-lazy="item.avator">
             <span class="name">{{ item.name }}</span>
@@ -133,6 +134,9 @@ export default {
     },
     scroll (pos) {
       this.scrollY = pos.y
+    },
+    selectSinger (item) {
+      this.$emit('select', item)
     },
     _calculateHeight () {
       this.listHeight = []

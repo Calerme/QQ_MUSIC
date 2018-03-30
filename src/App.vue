@@ -5,18 +5,21 @@
     <keep-alive>
       <router-view/>
     </keep-alive>
+    <player></player>
   </div>
 </template>
 
 <script>
 import QHeader from 'components/QHeader'
 import NavBar from 'components/NavBar'
+import Player from 'pages/Player'
 
 export default {
   name: 'App',
   components: {
     QHeader,
-    NavBar
+    NavBar,
+    Player
   }
 }
 </script>
