@@ -35,6 +35,23 @@ router.get('/api/getHotList', async (ctx, next) => {
   ctx.body = data.data
 })
 
+router.get('/api/lyric', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
+  const data = await axios.get(url, {
+    params: ctx.query,
+    headers: {
+      host: 'c.y.qq.com',
+      referer: 'https://y.qq.com/'
+    }
+  })
+  const reg = /^\w+\(({[^()]+})\)$/
+  const ret = reg.exec(data.data)[1]
+  ctx.response.set({ 'access-control-allow-credentials': true,
+    'access-control-allow-origin': '*' })
+  ctx.type = 'json'
+  ctx.body = ret
+})
+
 app.use(router.routes())
 app.listen(9527, () => {
   console.log('Server is running at 9527.')

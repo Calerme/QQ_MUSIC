@@ -11,7 +11,8 @@
       <div class="mask" ref="mask"></div>
     </div>
     <transition name="up">
-      <div v-show="showPlayWrap">
+      <div v-show="showPlayWrap"
+           @click.prevent.stop="random">
         <div v-if="songs.length"
              class="player-btn-wrapper"
              ref="playWrap">
@@ -127,8 +128,14 @@ export default {
         index
       })
     },
+    random () {
+      this.randomPlay({
+        list: this.songs
+      })
+    },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   },
   computed: {
@@ -150,8 +157,8 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  width: 15vw;
-  height: 15vw;
+  width: 60px;
+  height: 60px;
   z-index: 130;
 }
 .icon-back {

@@ -4,38 +4,59 @@
                 @enter="enter"
                 @after-enter="afterEnter"
                 @leave="leave"
-                @after-leave="afterLeave">
+                @after-leave="afterLeave">-->
       <div class="normal-player" v-show="fullScreen">
-      <div class="top">
-        <h3 class="song-name" v-html="currentSong.name"></h3>
-        <h4 class="author" v-html="currentSong.singer"></h4>
-        <div class="back"
-             @click="back">
-          <i class="icon-back"></i>
+        <div class="normal-player-bg"
+             :style="styleBg"></div>
+        <div class="top">
+          <h3 class="song-name" v-html="currentSong.name"></h3>
+          <h4 class="author" v-html="currentSong.singer"></h4>
+          <div class="back"
+               @click="back">
+            <i class="icon-back"></i>
+          </div>
         </div>
-      </div>
-      <div class="middle">
-        <div class="disc_bg rotate"
-             :class="{'pause': playing}">
-          <div class="disc"
-               :style="styleBg"></div>
+        <div class="middle">
+          <div class="disc_bg"
+               ref="normalDisc">
+            <div class="disc rotate"
+                 :class="{'pause': !playing}"
+                 :style="styleBg"></div>
+          </div>
+          <div class="progress-wrapper">
+            <span class="progress-time progress-current-time">{{currentTime | formatTime}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent"
+                            @change-time="changeTime"></progress-bar>
+            </div>
+            <span class="progress-time progress-duration-time">
+              {{duration | formatTime}}
+            </span>
+          </div>
         </div>
-      </div>
-      <div class="bottom">
-        <i class="icon icon-mode-sequence"></i>
-        <i class="icon icon-prev"></i>
-        <i class="icon icon-play"></i>
-        <i class="icon icon-next"></i>
+        <div class="bottom">
+        <i class="icon"
+           :class="iconMode"
+           @click.stop="changeMode"></i>
+        <i class="icon icon-prev"
+           :class="{'disable': !songReady}"
+           @click="prev"></i>
+        <i class="icon"
+           :class="[playing ? 'icon-pause' : 'icon-play',{disable: !songReady}]"
+           @click="togglePlaying"></i>
+        <i class="icon icon-next"
+           @click="next"
+           :class="{'disable': !songReady}"></i>
         <i class="icon icon-favo-empty"></i>
       </div>
-    </div>
+      </div>
     </transition>
     <transition name="mini">
       <div class="mini-player"
            v-show="!fullScreen"
-           @click.stop="show">
+           @click="show">
         <div class="disc_bg rotate"
-             :class="{'pause': playing}">
+             :class="{'pause': !playing}">
           <div class="disc"
                :style="styleBg"></div>
         </div>
@@ -44,39 +65,92 @@
           <h4 class="author" v-html="currentSong.singer"></h4>
         </div>
         <div class="btns">
-          <i class="icon ctrl icon-pause"></i>
+          <progress-circle
+            @click.native.stop="togglePlaying"
+            :percent="percent">
+            <i class="icon ctrl"
+               :class="playing ? 'icon-pause' : 'icon-play'"></i>
+          </progress-circle>
           <i class="icon icon-list"></i>
         </div>
       </div>
     </transition>
+    <audio ref="audio"
+           :src="currentSong.url"
+           @canplay="ready($event)"
+           @timeupdate="updateTime($event)"
+           @error="error"
+           @ended="end"></audio>
   </div>
 </template>
 
 <script>
 import {mapGetters, mapMutations} from 'vuex'
+import animations from 'create-keyframe-animation'
+import ProgressBar from 'pages/ProgressBar'
+import ProgressCircle from 'base/progresscircle'
+import {playMode} from 'common/js/config'
+import {shuffle} from 'common/js/util'
+import Lyric from 'lyric-parser'
+
+const MODE_CLASS = {
+  [playMode.sequence]: 'icon-mode-sequence',
+  [playMode.loop]: 'icon-mode-loop',
+  [playMode.random]: 'icon-mode-random'
+}
 
 export default {
   name: 'player',
   data () {
     return {
-      styleBg: {}
+      styleBg: {},
+      songReady: false,
+      currentTime: 0,
+      duration: 0,
+      currentLyric: null
     }
   },
   computed: {
     imgURL () {
       return `url(${this.currentSong.image})`
     },
+    percent () {
+      const percent = this.currentTime / this.duration
+      return percent
+    },
+    iconMode () {
+      return MODE_CLASS[this.mode]
+    },
     ...mapGetters([
       'singer',
       'currentSong',
       'fullScreen',
+      'sequencelist',
       'playlist',
-      'playing'
+      'playing',
+      'currentIndex',
+      'mode'
     ])
   },
   watch: {
     imgURL (newVal) {
       this.styleBg.backgroundImage = newVal
+    },
+    currentSong (newSong, oldSOng) {
+      this.$nextTick(() => {
+        if (newSong.id === oldSOng.id) return
+        this.$refs.audio.play()
+        this.getLyric()
+      })
+    },
+    playing (newVal) {
+      this.$nextTick(() => {
+        if (newVal) {
+          this.$refs.audio.play()
+        } else {
+          this.$refs.audio.pause()
+        }
+      })
     }
   },
   methods: {
@@ -88,20 +162,173 @@ export default {
       this.setFullScreen(true)
     },
     enter (el, done) {
-
+      const {x, y, scale} = this._getPosAndScale()
+      const animation = {
+        0: {
+          transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+        },
+        60: {
+          transform: `translate3d(0, 0, 0) scale(1.1)`
+        },
+        100: {
+          transform: `translate3d(0, 0, 0) scale(1)`
+        }
+      }
+      animations.registerAnimation({
+        name: 'move',
+        animation,
+        presets: {
+          duration: 400,
+          easing: 'linear'
+        }
+      })
+      animations.runAnimation(this.$refs.normalDisc, 'move', done)
     },
     afterEnter (el) {
-
+      animations.unregisterAnimation('move')
+      this.$refs.normalDisc.style.animation = ''
     },
     leave (el, done) {
-
+      const {x, y, scale} = this._getPosAndScale()
+      const animation = {
+        0: {
+          transform: `translate3d(0, 0, 0) scale(0)`
+        },
+        60: {
+          transform: `translate3d(${x}px,${y}px,0) scale(0.2)`
+        },
+        100: {
+          transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+        }
+      }
+      animations.registerAnimation({
+        name: 'toMini',
+        animation,
+        presets: {
+          duration: 300,
+          easing: 'linear'
+        }
+      })
+      animations.runAnimation(this.$refs.normalDisc, 'toMini', done)
     },
     afterLeave (el) {
-
+      animations.unregisterAnimation('toMini')
+      this.$refs.normalDisc.style.animation = ''
+    },
+    togglePlaying () {
+      this.setPlaying(!this.playing)
+    },
+    loop () {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+    },
+    next () {
+      if (!this.songReady) return
+      let index = this.currentIndex + 1
+      if (index === this.playlist.length) {
+        index = 0
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+    },
+    prev () {
+      if (!this.songReady) return
+      let index = this.currentIndex - 1
+      if (index < 0) {
+        index = this.playlist.length - 1
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+      console.log(this.playlist)
+    },
+    ready (e) {
+      this.songReady = true
+      this.duration = e.target.duration
+    },
+    updateTime (e) {
+      this.currentTime = e.target.currentTime
+    },
+    changeTime (percent) {
+      const currentTime = this.duration * percent
+      this.$refs.audio.currentTime = currentTime
+    },
+    error () {
+      this.songReady = true
+      this.next()
+    },
+    changeMode () {
+      const mode = (this.mode + 1) % 3
+      this.setMode(mode)
+      let list = null
+      if (mode === playMode.random) {
+        list = shuffle(this.sequencelist)
+      } else {
+        list = this.playlist
+      }
+      this._resetCurrentIndex(list)
+      this.setPlayList(list)
+    },
+    end () {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
+    getLyric () {
+      this.currentSong.getLyric()
+        .then(lyric => {
+          this.currentLyric = new Lyric(lyric)
+          console.log(this.currentLyric)
+        })
+    },
+    _resetCurrentIndex (list) {
+      const newIndex = list.findIndex((item) => {
+        return item.id === this.currentSong.id
+      })
+      console.log(newIndex)
+      this.setCurrentIndex(newIndex)
+    },
+    _getPosAndScale () {
+      const targetWidth = 50
+      const paddingLeft = 35 // 中心坐标距左边的宽度
+      const paddingBottom = 30 // 中心坐标距底部的宽度
+      const paddingTop = 100 // 大碟片上边缘距离顶部距离
+      const width = window.innerWidth * 0.8
+      const scale = targetWidth / width
+      const x = -(window.innerWidth / 2 - paddingLeft)
+      const y = window.innerHeight - (width / 2 + paddingTop) - paddingBottom
+      return {
+        x,
+        y,
+        scale
+      }
     },
     ...mapMutations({
-      setFullScreen: 'SET_FULL_SCREEN'
+      setFullScreen: 'SET_FULL_SCREEN',
+      setPlaying: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAYLIST'
     })
+  },
+  filters: {
+    formatTime (interval) {
+      let s = interval | 0
+      let minute = String((s / 60) | 0)
+      s = String(s % 60)
+      return `${minute.padStart(2, '0')}:${s.padStart(2, '0')}`
+    }
+  },
+  components: {
+    ProgressBar,
+    ProgressCircle
   }
 }
 </script>
@@ -115,7 +342,16 @@ export default {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: gray;
+  background-color: #777;
+}
+.normal-player-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent no-repeat center/cover;
+  filter: blur(40px);
 }
 .top {
   position: absolute;
@@ -136,8 +372,8 @@ export default {
   position: absolute;
   top: 10px;
   left: 15px;
-  width: 10vw;
-  height: 10vw;
+  width: 40px;
+  height: 40px;
 }
 .top .icon-back {
   content: '';
@@ -149,6 +385,7 @@ export default {
 .middle {
   position: absolute;
   top: 100px;
+  bottom: 120px;
   left: 0;
   width: 100%;
   .disc_bg {
@@ -166,6 +403,28 @@ export default {
       border-radius: 50%;
     }
   }
+  .progress-wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    .progress-time {
+      font-size: $baseFontSize;
+      font-weight: bold;
+      color: #333;
+    }
+    .progress-bar-wrapper {
+      width: 70%;
+      height: 5px;
+      margin: 0 10px;
+      background-color: $baseColorLighterGray;
+      border-radius: 2.5px;
+    }
+  }
 }
 .bottom {
   display: flex;
@@ -178,16 +437,16 @@ export default {
   padding: 30px 0;
 }
 .icon {
-  width: 13vw;
-  height: 13vw;
+  width: 50px;
+  height: 50px;
   border: 2px solid $baseColor;
   border-radius: 50%;
   padding: 5px;
 }
 .icon.icon-play,
 .icon.icon-pause {
-  width: 15vw;
-  height: 15vw;
+  width: 60px;
+  height: 60px;
 }
 .icon:before {
   content: ' ';
@@ -246,7 +505,7 @@ export default {
 
 .rotate {
   animation-name: rotate;
-  animation-duration: 8s;
+  animation-duration: 12s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
@@ -310,9 +569,10 @@ export default {
     padding-right: 10px;
     flex-grow: 1;
     .ctrl {
-      width: 10vw;
-      height: 10vw;
-      margin-right: 10px;
+      display: block;
+      width: 40px;
+      height: 40px;
+      border-color: transparent;
     }
     .icon-list {
       border: none;
@@ -325,5 +585,9 @@ export default {
 
 .pause {
   animation-play-state: paused;
+}
+
+.disable {
+  filter: grayscale(100%);
 }
 </style>
