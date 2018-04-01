@@ -6,11 +6,12 @@
             ref="scroll">
       <div>
         <div class="slider-container">
-          <Slider v-if="sliderList.length">
+          <Slider v-if="sliderList.length"
+                  ref="slider">
             <a v-for="item of sliderList"
                :key="item.id"
                :href="item.linkUrl"
-            class="slider-item-wrapper">
+               class="slider-item-wrapper">
               <img :src="item.picUrl"
                    @load="loadImage"
                    alt="推荐歌曲">
@@ -19,17 +20,18 @@
         </div>
         <h2 class="hot-list-title">热门歌单</h2>
         <div class="hot-list">
-          <a v-for="item of hotList"
+          <div v-for="item of hotList"
              :key="item.dissid"
              :href="'https://y.qq.com/n/yqq/playsquare/'+ item.dissid + '.html'"
-             class="hot-list-item">
+             class="hot-list-item"
+             @click.prevent="selectItem(item)">
             <img v-lazy="item.imgurl"
                  :alt="item.title">
             <div class="hot-list-item-information">
               <h3 class="hot-list-item-title">{{item.creator.name}}</h3>
               <p class="hot-list-item-info">{{item.dissname}}</p>
             </div>
-          </a>
+          </div>
         </div>
       </div>
       <div v-show="!hotList.length"
@@ -37,6 +39,7 @@
         <Loading></Loading>
       </div>
     </Scroll>
+    <router-view></router-view>
   </div>
 </template>
 <script>
@@ -44,9 +47,12 @@ import {getSlider, getHotList} from 'api/getRecommend'
 import Slider from 'base/slider'
 import Scroll from 'base/scroll'
 import Loading from 'components/Loading'
+import {playlistMixin} from 'common/js/mixin'
+import {mapMutations} from 'vuex'
 
 export default {
   name: 'Recommend',
+  mixins: [playlistMixin],
   data () {
     return {
       sliderList: [],
@@ -58,8 +64,22 @@ export default {
     this._getHotList()
   },
   mounted () {
+    this.$nextTick(() => {
+      console.log(this.$refs)
+    })
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.scroll.$el.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
+    selectItem (item) {
+      this.$router.push({
+        path: `/recommend/${item.dissid}`
+      })
+      this.setDisc(item)
+    },
     _getRecommend () {
       getSlider()
         .then((data) => {
@@ -83,7 +103,10 @@ export default {
         this.$refs.scroll.refresh()
         this.checkImgLoaded = true
       }
-    }
+    },
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    })
   },
   components: {
     Slider,
@@ -157,8 +180,14 @@ export default {
     bottom: 0;
   }
   .recommend-scroll {
-    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
     overflow: hidden;
+  }
+  .slider-container {
+    width: 100vw;
   }
   .loading-container {
     display: flex;

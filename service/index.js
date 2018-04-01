@@ -52,6 +52,29 @@ router.get('/api/lyric', async (ctx, next) => {
   ctx.body = ret
 })
 
+router.get('/api/getdisc', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+  const data = await axios.get(url, {
+    params: ctx.query,
+    headers: {
+      host: 'c.y.qq.com',
+      referer: 'https://y.qq.com/n/yqq/playsquare/3712981979.html'
+    }
+  })
+  console.log(data)
+  ctx.body = data.data
+})
+
+router.get('/api/gettoplist', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_myqq_toplist.fcg'
+  const data = await axios.get(url, {
+    params: ctx.query
+  })
+  ctx.response.set({ 'access-control-allow-credentials': true,
+    'access-control-allow-origin': '*' })
+  ctx.body = data.data
+})
+
 app.use(router.routes())
 app.listen(9527, () => {
   console.log('Server is running at 9527.')

@@ -6,6 +6,8 @@ import Singer from 'pages/Singer'
 import Hot from 'pages/Hot'
 import Search from 'pages/Search'
 import SingerDesc from 'pages/SingerDesc'
+import Disc from 'pages/disc'
+import TopList from 'pages/TopList'
 
 Vue.use(Router)
 
@@ -19,7 +21,13 @@ export default new Router({
     {
       path: '/recommend',
       name: 'Recommend',
-      component: Recommend
+      component: Recommend,
+      children: [
+        {
+          path: ':id',
+          component: Disc
+        }
+      ]
     },
     {
       path: '/singer',
@@ -36,7 +44,13 @@ export default new Router({
     {
       path: '/hot',
       name: 'Hot',
-      component: Hot
+      component: Hot,
+      children: [
+        {
+          path: ':id',
+          component: TopList
+        }
+      ]
     },
     {
       path: '/search',

@@ -38,9 +38,7 @@ export default {
   watch: {
     percent (newVal) {
       if (this.isTouching) return
-      if (this.barWrapWidth) {
-        this._initialBarFigure()
-      }
+      this._initialBarFigure()
       const width = this.barWrapWidth * newVal
       this.$refs.bar.style.width = `${width}px`
       this.$refs.barBtn.style.transform = `translate3d(${width}px,0, 0)`

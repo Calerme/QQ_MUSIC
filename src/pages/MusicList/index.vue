@@ -45,10 +45,12 @@ import Scroll from 'base/scroll'
 import SongList from 'base/songlist'
 import Loading from 'components/Loading'
 import {mapActions} from 'vuex'
+import {playlistMixin} from 'common/js/mixin'
 
 const PAD_TOP_HEIGHT = 70
 
 export default {
+  mixins: [playlistMixin],
   name: 'music-list',
   props: {
     bgImage: {
@@ -132,6 +134,11 @@ export default {
       this.randomPlay({
         list: this.songs
       })
+    },
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.list.$el.style.bottom = bottom
+      this.$refs.list.refresh()
     },
     ...mapActions([
       'selectPlay',

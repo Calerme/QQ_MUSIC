@@ -49,8 +49,11 @@
 <script>
 import Scroll from 'base/scroll'
 import Loading from 'components/Loading'
+import {playlistMixin} from 'common/js/mixin'
+
 export default {
   name: 'listview',
+  mixins: [playlistMixin],
   props: {
     data: {
       type: Array,
@@ -115,6 +118,11 @@ export default {
     this.TITLE_HEIGHT = 26
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : 0
+      this.$refs.scroll.$el.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
     onShortcutTouchStart (e) {
       const anchorIndex = e.target.dataset.index
       const firstTouch = e.touches[0]
