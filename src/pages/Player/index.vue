@@ -111,7 +111,7 @@
                @close="hidePlayList"></play-list>
     <audio ref="audio"
            :src="currentSong.url"
-           @canplay="ready($event)"
+           @play="ready($event)"
            @timeupdate="updateTime($event)"
            @error="error"
            @ended="end"></audio>
@@ -186,9 +186,8 @@ export default {
       if (this.currentLyric) {
         this.currentLyric.stop()
       }
-      setTimeout(() => {
-        // 如果在歌曲一开始快速点击暂停，但歌曲还是会播放，因为 currentSong 变化会延迟触发 play() 所以这里要判断一下
-        if (!this.playing) return
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => {
         this.$refs.audio.play()
         this.getLyric()
       }, 1000)
@@ -371,6 +370,9 @@ export default {
     getLyric () {
       this.currentSong.getLyric()
         .then(lyric => {
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           this.currentLyric = new Lyric(lyric, this._handleLyric.bind(this))
           if (this.playing) {
             this.currentLyric.play()

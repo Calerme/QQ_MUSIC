@@ -1,16 +1,65 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Recommend from 'pages/Recommend'
-import Singer from 'pages/Singer'
-import Hot from 'pages/Hot'
-import Search from 'pages/Search'
-import SingerDesc from 'pages/SingerDesc'
-import Disc from 'pages/disc'
-import TopList from 'pages/TopList'
-import Dashboard from 'pages/Dashboard'
+// import Recommend from 'pages/Recommend'
+// import Singer from 'pages/Singer'
+// import Hot from 'pages/Hot'
+// import Search from 'pages/Search'
+// import SingerDesc from 'pages/SingerDesc'
+// import Disc from 'pages/disc'
+// import TopList from 'pages/TopList'
+// import Dashboard from 'pages/Dashboard'
 
 Vue.use(Router)
+
+const Recommend = (resolve) => {
+  import('pages/Recommend')
+    .then(module => {
+      resolve(module)
+    })
+}
+const Singer = (resolve) => {
+  import('pages/Singer')
+    .then(module => {
+      resolve(module)
+    })
+}
+const Hot = (resolve) => {
+  import('pages/Hot')
+    .then(module => {
+      resolve(module)
+    })
+}
+const Search = (resolve) => {
+  import('pages/Search')
+    .then(module => {
+      resolve(module)
+    })
+}
+const SingerDesc = (resolve) => {
+  import('pages/SingerDesc')
+    .then(module => {
+      resolve(module)
+    })
+}
+const Disc = (resolve) => {
+  import('pages/disc')
+    .then(module => {
+      resolve(module)
+    })
+}
+const TopList = (resolve) => {
+  import('pages/TopList')
+    .then(module => {
+      resolve(module)
+    })
+}
+const Dashboard = (resolve) => {
+  import('pages/Dashboard')
+    .then(module => {
+      resolve(module)
+    })
+}
 
 export default new Router({
   mode: 'history',
