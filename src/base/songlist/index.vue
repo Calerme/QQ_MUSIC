@@ -4,11 +4,15 @@
       <li v-for="(song, index) in songs"
           :key="index"
           class="item">
-        <div class="song-item-content"
-             @click="selectSong(song, index)">
-          <h2 class="name">{{ song.name }}</h2>
-          <p class="desc">{{ getDesc(song) }}</p>
-        </div>
+          <div class="song-item-content"
+               @click="selectSong(song, index)"
+               :key="song.id">
+            <h2 class="name">{{ song.name }}</h2>
+            <p class="desc">{{ getDesc(song) }}</p>
+            <div class="delbtn"
+                 v-if="delBtn"
+                 @click="del(song)"></div>
+          </div>
       </li>
     </ul>
   </div>
@@ -20,10 +24,19 @@ export default {
   props: {
     songs: {
       type: Array,
-      default: new Array(0)
+      default () {
+        return []
+      }
+    },
+    delBtn: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
+    del (song) {
+      this.$emit('del', song)
+    },
     getDesc (song) {
       return `${song.singer} - ${song.album}`
     },
@@ -40,10 +53,12 @@ export default {
   width: 100%;
   padding: 20px;
 }
-.song-item-content {
-  width: 100%;
+.item {
   border-bottom: 1px solid #e1e1e1;
-  overflow: hidden;
+  position: relative;
+}
+.song-item-content {
+  width: 80%;
 }
 ul {
   margin: 0;
@@ -62,5 +77,27 @@ li {
 .desc {
   margin: 6px 0 10px;
   font-size: $baseFontSize;
+}
+.name,
+.desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.delbtn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  background: url("~common/img/x.svg") no-repeat center/70%;
+}
+.slip-enter-active,
+.slip-leave-active {
+  transition: all .3s;
+}
+.slip-enter,
+.slip-leave-to {
+  transform: translate3d(-100%, 0, 0);
 }
 </style>

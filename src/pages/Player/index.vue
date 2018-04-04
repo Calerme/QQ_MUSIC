@@ -77,7 +77,9 @@
         <i class="icon icon-next"
            @click="next"
            :class="{'disable': !songReady}"></i>
-        <i class="icon icon-favo-empty"></i>
+        <i class="icon"
+           :class="isFavo()"
+           @click="toggleFavo"></i>
       </div>
       </div>
     </transition>
@@ -101,10 +103,12 @@
             <i class="icon ctrl"
                :class="playing ? 'icon-pause' : 'icon-play'"></i>
           </progress-circle>
-          <i class="icon icon-list"></i>
+          <i class="icon icon-list" @click.stop="showPlayList"></i>
         </div>
       </div>
     </transition>
+    <play-list :showFlag="showListFlag"
+               @close="hidePlayList"></play-list>
     <audio ref="audio"
            :src="currentSong.url"
            @canplay="ready($event)"
@@ -115,7 +119,7 @@
 </template>
 
 <script>
-import {mapGetters, mapMutations} from 'vuex'
+import {mapGetters, mapMutations, mapActions} from 'vuex'
 import animations from 'create-keyframe-animation'
 import ProgressBar from 'pages/ProgressBar'
 import ProgressCircle from 'base/progresscircle'
@@ -123,6 +127,7 @@ import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll'
+import PlayList from 'pages/PlayList'
 
 const MODE_CLASS = {
   [playMode.sequence]: 'icon-mode-sequence',
@@ -141,7 +146,8 @@ export default {
       currentLyric: null,
       currentLineNum: 0,
       currentShow: 'disc',
-      playingLyric: ''
+      playingLyric: '',
+      showListFlag: false
     }
   },
   computed: {
@@ -163,7 +169,8 @@ export default {
       'playlist',
       'playing',
       'currentIndex',
-      'mode'
+      'mode',
+      'favoList'
     ])
   },
   watch: {
@@ -171,16 +178,27 @@ export default {
       this.styleBg.backgroundImage = newVal
     },
     currentSong (newSong, oldSOng) {
+      if (newSong.id == null) {
+        this.currentLyric.stop()
+        return
+      }
       if (newSong.id === oldSOng.id) return
       if (this.currentLyric) {
         this.currentLyric.stop()
       }
       setTimeout(() => {
+        // 如果在歌曲一开始快速点击暂停，但歌曲还是会播放，因为 currentSong 变化会延迟触发 play() 所以这里要判断一下
+        if (!this.playing) return
         this.$refs.audio.play()
         this.getLyric()
       }, 1000)
     },
     playing (newVal) {
+      if (newVal) {
+        this.currentLyric && this.currentLyric.play()
+      } else {
+        this.currentLyric && this.currentLyric.stop()
+      }
       this.$nextTick(() => {
         if (newVal) {
           this.$refs.audio.play()
@@ -194,6 +212,15 @@ export default {
     this.touch = {}
   },
   methods: {
+    toggleFavo () {
+      this.toggleSongToFavo(this.currentSong)
+    },
+    isFavo () {
+      const index = this.favoList.findIndex(item => {
+        return this.currentSong.id === item.id
+      })
+      return index > -1 ? 'icon-favo-solid' : 'icon-favo-empty'
+    },
     back () {
       this.setFullScreen(false)
       console.log(this.imgURL)
@@ -256,6 +283,7 @@ export default {
       this.$refs.normalDisc.style.animation = ''
     },
     togglePlaying () {
+      if (!this.songReady) return
       this.setPlaying(!this.playing)
       if (this.currentLyric) {
         this.currentLyric.togglePlay()
@@ -305,6 +333,7 @@ export default {
     ready (e) {
       this.songReady = true
       this.duration = e.target.duration
+      this.saveSongToRecentList(this.currentSong)
     },
     updateTime (e) {
       this.currentTime = e.target.currentTime
@@ -327,7 +356,7 @@ export default {
       if (mode === playMode.random) {
         list = shuffle(this.sequencelist)
       } else {
-        list = this.playlist
+        list = this.sequencelist
       }
       this._resetCurrentIndex(list)
       this.setPlayList(list)
@@ -358,8 +387,10 @@ export default {
       const touch = e.touches[0]
       this.touch.startX = touch.pageX
       this.touch.startY = touch.pageY
-      this.$refs.lyricScroll.$el.style.transition = ''
-      this.$refs.middleL.style.transition = ''
+      if (this.$refs.lyricScroll) {
+        this.$refs.lyricScroll.$el.style.transition = ''
+        this.$refs.middleL.style.transition = ''
+      }
     },
     middleTouchMove (e) {
       if (!this.touch.initiated) return
@@ -373,8 +404,10 @@ export default {
       const left = this.currentShow === 'disc' ? 0 : -window.innerWidth
       const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
       this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
-      this.$refs.lyricScroll.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
-      this.$refs.middleL.style.opacity = 1 - this.touch.percent
+      if (this.$refs.lyricScroll) {
+        this.$refs.lyricScroll.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
+        this.$refs.middleL.style.opacity = 1 - this.touch.percent
+      }
     },
     middleTouchEnd () {
       if (!this.touch.percent) return
@@ -398,10 +431,18 @@ export default {
           opacity = 0
         }
       }
-      this.$refs.lyricScroll.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
-      this.$refs.lyricScroll.$el.style.transition = `all .4s`
-      this.$refs.middleL.style.opacity = opacity
-      this.$refs.middleL.style.transition = `all .4s`
+      if (this.$refs.lyricScroll) {
+        this.$refs.lyricScroll.$el.style.transform = `translate3d(${offsetWidth}px, 0, 0)`
+        this.$refs.lyricScroll.$el.style.transition = `all .4s`
+        this.$refs.middleL.style.opacity = opacity
+        this.$refs.middleL.style.transition = `all .4s`
+      }
+    },
+    hidePlayList () {
+      this.showListFlag = false
+    },
+    showPlayList () {
+      this.showListFlag = true
     },
     _handleLyric ({lineNum, txt}) {
       this.currentLineNum = lineNum
@@ -440,7 +481,11 @@ export default {
       setCurrentIndex: 'SET_CURRENT_INDEX',
       setMode: 'SET_PLAY_MODE',
       setPlayList: 'SET_PLAYLIST'
-    })
+    }),
+    ...mapActions([
+      'saveSongToRecentList',
+      'toggleSongToFavo'
+    ])
   },
   filters: {
     formatTime (interval) {
@@ -453,7 +498,8 @@ export default {
   components: {
     ProgressBar,
     ProgressCircle,
-    Scroll
+    Scroll,
+    PlayList
   }
 }
 </script>

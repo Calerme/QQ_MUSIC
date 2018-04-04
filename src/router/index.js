@@ -8,6 +8,7 @@ import Search from 'pages/Search'
 import SingerDesc from 'pages/SingerDesc'
 import Disc from 'pages/disc'
 import TopList from 'pages/TopList'
+import Dashboard from 'pages/Dashboard'
 
 Vue.use(Router)
 
@@ -55,7 +56,17 @@ export default new Router({
     {
       path: '/search',
       name: 'Search',
-      component: Search
+      component: Search,
+      children: [
+        {
+          path: ':id',
+          component: SingerDesc
+        }
+      ]
+    },
+    {
+      path: '/dashboard',
+      component: Dashboard
     }
   ]
 })

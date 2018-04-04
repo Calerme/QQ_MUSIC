@@ -15,7 +15,7 @@ export default {
   data: function () {
     return {
       navList: [
-        {text: '推荐', path: '/Recommend'},
+        {text: '推荐', path: '/recommend'},
         {text: '歌手', path: '/singer'},
         {text: '排行', path: '/hot'},
         {text: '搜索', path: '/search'}]

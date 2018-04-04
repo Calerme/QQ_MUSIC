@@ -27,5 +27,14 @@ export default {
   },
   [types.SET_TOP_LIST] (state, list) {
     state.topList = list
+  },
+  [types.SET_SEARCH_HISTORY] (state, history) {
+    state.searchHistory = history
+  },
+  [types.SET_RECENT_LIST] (state, list) {
+    state.recentList = list
+  },
+  [types.SET_FAVO_LIST] (state, list) {
+    state.favoriteList = list
   }
 }

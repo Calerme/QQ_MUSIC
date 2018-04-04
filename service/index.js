@@ -75,6 +75,16 @@ router.get('/api/gettoplist', async (ctx, next) => {
   ctx.body = data.data
 })
 
+router.get('/api/gethotkey', async (ctx, next) => {
+  const url = 'https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg'
+  const res = await axios.get(url, {
+    params: ctx.query
+  })
+  ctx.response.set({ 'access-control-allow-credentials': true,
+    'access-control-allow-origin': '*' })
+  ctx.body = res.data
+})
+
 app.use(router.routes())
 app.listen(9527, () => {
   console.log('Server is running at 9527.')
