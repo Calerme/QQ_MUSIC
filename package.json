@@ -22,6 +22,7 @@
     "jsonp": "^0.2.1",
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",
+    "koa-static": "^4.0.2",
     "lyric-parser": "^1.0.1",
     "vue": "^2.5.2",
     "vue-lazyload": "^1.2.2",
