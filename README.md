@@ -1,21 +1,36 @@
-# qq_music
+# 在线展示地址
 
-> A Vue.js project
+clouddin.com 由于服务器配置较低，可能会造成访问不稳定。请自行下载该库进行尝试。
 
-## Build Setup
+# 项目展示
 
-``` bash
-# install dependencies
-npm install
+![GIF展示](./DEMO.gif)
 
-# serve with hot reload at localhost:8080
-npm run dev
+# 项目本地运行指南
 
-# build for production with minification
-npm run build
+## 下载项目到本地
 
-# build for production and view the bundle analyzer report
-npm run build --report
+```js
+git clone git@github.com:Calerme/QQ_MUSIC.git
 ```
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## 安装依赖
+
+```js
+npm install
+```
+
+## 运行项目与服务
+
+```js
+npm run dev
+npm run server
+```
+
+## 在浏览器输入
+
+localhost:8080
+
+即可浏览。因为 APP 是专为移动端开发的，其中有很多触摸事件，所以请尽量使用开发者工具将浏览模式调为移动端。
+
+
